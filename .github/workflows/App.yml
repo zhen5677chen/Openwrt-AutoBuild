@@ -1,0 +1,78 @@
+name: Openwrt-x86_64-App.
+
+on: 
+  repository_dispatch:
+  release:
+    types: published
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/App.yml'
+  #schedule:
+  #  - cron: 0 2 * * *
+  #watch:
+  #  types: started
+
+jobs:
+  build:
+    runs-on: Ubuntu-20.04
+    
+    name: App
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64]
+        
+    steps:
+    - name: Checkout
+      uses: actions/checkout@main
+      
+    - name: Load app.ini
+      run: |
+        source "${GITHUB_WORKSPACE}/App/app.openclash"
+        echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
+        echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
+        echo "APP_NAME=${APP_NAME}" >> $GITHUB_ENV
+        echo "PO2lMO=${PO2lMO}" >> $GITHUB_ENV
+      
+    - name: 准备SDK
+      run: |
+        wget https://archive.openwrt.org/snapshots/trunk/x86/64/OpenWrt-SDK-x86-64_gcc-5.3.0_musl-1.1.16.Linux-x86_64.tar.bz2
+        tar xjf OpenWrt-SDK-x86-64_gcc-5.3.0_musl-1.1.16.Linux-x86_64.tar.bz2
+        cd OpenWrt-SDK-x86-64_gcc-5.3.0_musl-1.1.16.Linux-x86_64
+        
+    - name: Clone 项目
+      run: |
+        cd OpenWrt-SDK-x86-64_gcc-5.3.0_musl-1.1.16.Linux-x86_64
+        cd package
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH $APP_NAME
+    
+    - name: 编译 po2lmo
+      if: env.PO2lMO == 'true'
+      run: |
+        cd OpenWrt-SDK-x86-64_gcc-5.3.0_musl-1.1.16.Linux-x86_64
+        svn co https://github.com/vernesong/OpenClash/trunk/luci-app-openclash/tools package/$APP_NAME/tools
+        pushd package/$APP_NAME/tools/po2lmo
+        make && sudo make install
+        popd
+
+    - name: 开始编译
+      run: | 
+        cd OpenWrt-SDK-x86-64_gcc-5.3.0_musl-1.1.16.Linux-x86_64
+        make package/$APP_NAME/$APP_NAME/compile V=99
+        du -h --max-depth=4 ./bin
+        
+    - name: 准备编译好的ipk
+      run: |
+        cd OpenWrt-SDK-x86-64_gcc-5.3.0_musl-1.1.16.Linux-x86_64
+        mkdir -p ./artifact/IPK
+        find ./bin/x86/packages/base/ -type f -name "*.ipk" | xargs -i mv -f {} ./artifact/IPK/
+        cd ./artifact/IPK
+        echo "IPK=$PWD" >> $GITHUB_ENV
+        
+    - name: 上传ipk
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.APP_NAME }}
+        path: ${{ env.IPK }}/        
