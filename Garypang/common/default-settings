@@ -18,13 +18,6 @@ uci commit dockerd
 
 sed -i '/profile.d/d' /lib/upgrade/keep.d/base-files
 
-sed -i '/openwrt_kiddin9/d' /etc/opkg/distfeeds.conf
-sed -i 's?\(src/gz openwrt_\(core\|telephony\)\)?#\1?' /etc/opkg/distfeeds.conf
-VERSION="$(cat /etc/os-release | grep "VERSION=" | cut -d \" -f 2)"
-ARCH="$(cat /etc/os-release | grep "OPENWRT_ARCH=" | cut -d \" -f 2)"
-sed -i "\$a src/gz openwrt_kmods https://op.supes.top/packages/$ARCH/kmods/$VERSION" /etc/opkg/distfeeds.conf
-sed -i "\$a src/gz openwrt_kiddin9 https://op.supes.top/packages/$ARCH" /etc/opkg/distfeeds.conf
-
 echo $(uci -q get uhttpd.main.index_page) | grep -q "cgi-bin/luci" ||
 	uci -q add_list uhttpd.main.index_page='cgi-bin/luci' && uci commit uhttpd
 
@@ -34,12 +27,6 @@ echo $(uci -q get uhttpd.main.index_page) | grep -q "cgi-bin/luci" ||
 	ln -s /usr/bin/wget /usr/bin/wget-ssl
 
 sed -i "s/git-.*-\(.*\)/git-\1/g" /usr/lib/lua/luci/version.lua
-
-/etc/init.d/packages enable
-sed -i '/S99packages/d' /etc/crontabs/root
-hour="$(grep -m1 -ao '[4-6]' /dev/urandom | head -n1)"
-min="$(grep -m1 -ao '[0-5][0-9]' /dev/urandom | head -n1)"
-echo "$min $hour * * * sh /etc/rc.d/S99packages >/dev/null 2>&1" >> /etc/crontabs/root
 
 [[ "$(echo "$(/sbin/cpuinfo 2>/dev/null)" | grep -i "MHz")" ]] || sed -i "s/_('CPU Info'),cpuinfo.cpufreq,//" /www/luci-static/resources/view/status/include/10_system.js
 
@@ -53,7 +40,10 @@ test $version -lt 1 && {
 	uci -q set luci.main.lang='auto'
 	uci -q set luci.main.mediaurlbase=/luci-static/edge
 	uci commit luci
-
+	
+	uci -q set dropbear.@dropbear[0].Interface='lan'
+	uci commit dropbear
+	
 	uci -q get system.@system[0] >/dev/null 2>&1 && {
 		uci -q set system.@system[0].hostname="${DISTRIB_ID}"
 		uci -q set system.@system[0].zonename='Asia/Shanghai'
@@ -121,9 +111,8 @@ test $version -lt 1 && {
 	grep -q /etc/dnsmasq.d /etc/dnsmasq.conf ||
 		echo "conf-dir=/etc/dnsmasq.d" >> /etc/dnsmasq.conf
 
-	uci -q set turboacc.config.sw_flow='0'
-	uci -q set turboacc.config.sfe_flow='0'
-	uci commit turboacc
+	uci -q set firewall.@defaults[0].fullcone='1'
+	uci commit firewall
 
 	uci -q set fstab.@global[0].anon_mount=1
 	uci commit fstab
@@ -133,10 +122,11 @@ test $version -lt 1 && {
 	uci commit network
   
 	uci -q set dhcp.@dnsmasq[0].dns_redirect='1'
-	uci -q set dhcp.dnsmasq[0].allservers='1'
-	uci -q set dhcp.lan.force='1'
+	uci -q set dhcp.@dnsmasq[0].allservers='1'
+	uci -q del dhcp.@dnsmasq[0].noresolv
 	uci -q set dhcp.@dnsmasq[0].cachesize='1500'
 	uci -q set dhcp.@dnsmasq[0].min_ttl='3600'
+	uci -q set dhcp.lan.force='1'
 	uci -q set dhcp.lan.ra='hybrid'
 	uci -q set dhcp.lan.ndp='hybrid'
 	uci -q set dhcp.lan.dhcpv6='hybrid'
@@ -204,7 +194,6 @@ test $version -lt 1 && {
 SYSCTL_LOCAL=/etc/sysctl.d/50-local.conf
 mkdir -p /etc/sysctl.d
 echo -n >$SYSCTL_LOCAL
-
 echo net.nf_conntrack_max=$nf_conntrack_max >>$SYSCTL_LOCAL
 echo net.ipv4.ip_early_demux=0 >>$SYSCTL_LOCAL
 echo net.bridge.bridge-nf-call-iptables=0 >>$SYSCTL_LOCAL
@@ -220,3 +209,13 @@ rm -rf /tmp/luci-*
 
 uci -q set base_config.@status[0].version=$version
 uci commit base_config
+
+(
+[[ -f "/bin/coremark" && ! -f "/etc/bench.log" && "$(uci -q get wizard.default.coremark)" == '1' ]] && {
+		sleep 30
+		/bin/coremark >/tmp/coremark.log
+		cat /tmp/coremark.log | grep "CoreMark 1.0" | cut -d "/" -f 1 | cut -d "." -f -2 >/etc/bench.log
+		sed -i 's/CoreMark 1.0/(CpuMark/g' /etc/bench.log
+		echo " Scores)" >>/etc/bench.log
+}
+) &

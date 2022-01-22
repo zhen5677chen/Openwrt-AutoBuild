@@ -1,22 +1,45 @@
 #!/bin/bash
 #=================================================
 shopt -s extglob
+commitid="$(curl -sfL https://github.com/openwrt/openwrt/commits/master/include | grep -o 'href=".*>kernel: bump 5.10' | head -1 | cut -d / -f 5 | cut -d "#" -f 1)"
+version="$(git rev-parse HEAD)"
+git checkout $commitid
+git checkout HEAD^
+kernel_v="$(cat include/kernel-5.10 | grep LINUX_KERNEL_HASH-5.10* | cut -f 2 -d - | cut -f 1 -d ' ')"
+sed -i "s?targets/%S/packages?packages/%A/kmods/$kernel_v?" include/feeds.mk
+mv -f target/linux package/kernel include/kernel-version.mk include/kernel-5.10 include/kernel-defaults.mk .github/
+git checkout $version
+rm -rf target/linux package/kernel include/kernel-version.mk include/kernel-5.10 include/kernel-defaults.mk
+mv -f .github/linux target/
+mv -f .github/kernel package/
+mv -f  .github/kernel-version.mk .github/kernel-5.10 .github/kernel-defaults.mk include/
+sed -i 's/ libelf//' tools/Makefile
+
+sed -i "s/DEFAULT_PACKAGES:=/DEFAULT_PACKAGES:=luci-app-advanced luci-app-firewall luci-app-gpsysupgrade luci-app-opkg luci-app-bypass luci-app-upnp luci-app-autoreboot \
+luci-app-wizard luci-app-nginx-manager luci-app-attendedsysupgrade luci-theme-edge luci-theme-bootstrap dnsmasq-full luci-ssl-nginx luci-base luci-compat luci-mod-rpc \
+luci-lib-ipkg luci-lib-fs coremark my-default-settings wget-ssl curl htop nano iptables-mod-fullconenat zram-swap kmod-lib-zstd kmod-ipt-offload kmod-tcp-bbr bash \
+wpad-basic-wolfssl kmod-usb2 kmod-usb3 automount /" include/target.mk
+sed -i "/dnsmasq \\\/d" include/target.mk
+sed -i 's/DEFAULT_PACKAGES +=/DEFAULT_PACKAGES += my-autocore-arm luci-app-cpufreq kmod-hwmon-pwmfan/' target/linux/rockchip/Makefile
+
 sed -i '/	refresh_config();/d' scripts/feeds
 [ ! -f feeds.conf ] && {
 sed -i '$a src-git kiddin9 https://github.com/kiddin9/openwrt-packages.git;master' feeds.conf.default
 }
+
 ./scripts/feeds update -a
 ./scripts/feeds install -a -p kiddin9
 ./scripts/feeds install -a
 cd feeds/kiddin9; git pull; cd -
+
 (
 svn export --force https://github.com/immortalwrt/immortalwrt/branches/openwrt-21.02/package/network/services/ppp package/network/services/ppp
 svn export --force https://github.com/immortalwrt/immortalwrt/branches/openwrt-21.02/package/network/services/dnsmasq package/network/services/dnsmasq
 svn export --force https://github.com/coolsnowwolf/lede/trunk/tools/upx tools/upx
 svn export --force https://github.com/coolsnowwolf/lede/trunk/tools/ucl tools/ucl
-svn co https://github.com/immortalwrt/immortalwrt/branches/openwrt-21.02/target/linux/generic/hack-5.4 target/linux/generic/hack-5.4
+svn co https://github.com/coolsnowwolf/lede/trunk/target/linux/generic/hack-5.10 target/linux/generic/hack-5.10
+rm -rf target/linux/generic/hack-5.10/{220-gc_sections*,781-dsa-register*}
 curl -sfL https://git.io/J0klM --create-dirs -o package/network/config/firewall/patches/fullconenat.patch
-curl -sfL https://raw.githubusercontent.com/coolsnowwolf/lede/master/target/linux/generic/hack-5.4/601-netfilter-export-udp_get_timeouts-function.patch -o target/linux/generic/hack-5.4/601-netfilter-export-udp_get_timeouts-function.patch
 ) &
 
 sed -i 's?zstd$?zstd ucl upx\n$(curdir)/upx/compile := $(curdir)/ucl/compile?g' tools/Makefile
@@ -25,8 +48,8 @@ sed -i 's/Os/O2/g' include/target.mk
 sed -i 's/$(TARGET_DIR)) install/$(TARGET_DIR)) install --force-overwrite/' package/Makefile
 sed -i "/mediaurlbase/d" package/feeds/*/luci-theme*/root/etc/uci-defaults/*
 sed -i '/root:/c\root:$1$tTPCBw1t$ldzfp37h5lSpO9VXk4uUE\/:18336:0:99999:7:::' package/base-files/files/etc/shadow
-sed -i -e '$a /etc/sysupgrade.conf' \
-       -e '$a /etc/bench.log' \
+sed -i 's/=bbr/=cubic/' package/kernel/linux/files/sysctl-tcp-bbr.conf
+sed -i -e '$a /etc/bench.log' \
        -e '/\/etc\/profile/d' \
        -e '/\/etc\/shinit/d' \
        package/base-files/files/lib/upgrade/keep.d/base-files-essential
@@ -39,10 +62,10 @@ CONFIG_CRYPTO_CHACHA20POLY1305=y\nCONFIG_BINFMT_MISC=y' `find target/linux -path
 sed -i 's/max_requests 3/max_requests 20/g' package/network/services/uhttpd/files/uhttpd.config
 #rm -rf ./feeds/packages/lang/{golang,node}
 sed -i 's?admin/status/channel_analysis??' package/feeds/luci/luci-mod-status/root/usr/share/luci/menu.d/luci-mod-status.json
-sed -i "s/askfirst/respawn/g" `find package target -name inittab`
+sed -i "s/tty1::askfirst/tty1::respawn/g" target/linux/*/base-files/etc/inittab
 date=`date +%m.%d.%Y`
+sed -i -e "/# REVISION:=/c\REVISION:=$date" -e '/VERSION_CODE:=/c\VERSION_CODE:=$(REVISION)' include/version.mk
 sed -i "/DISTRIB_DESCRIPTION/c\DISTRIB_DESCRIPTION=\"%D %C by Kiddin'\"" package/base-files/files/etc/openwrt_release
-sed -i "/CONFIG_VERSION_CODE=/c\CONFIG_VERSION_CODE=\"$date\"" devices/common/.config
 sed -i '$a cgi-timeout = 300' package/feeds/packages/uwsgi/files-luci-support/luci-*.ini
 sed -i '/limit-as/c\limit-as = 5000' package/feeds/packages/uwsgi/files-luci-support/luci-webui.ini
 sed -i "s/^.*vermagic$/\techo '1' > \$(LINUX_DIR)\/.vermagic/" include/kernel-defaults.mk
@@ -62,6 +85,7 @@ if [ -f sdk.tar.xz ]; then
 	tar -xJf sdk.tar.xz -C sdk
 	cp -rf sdk/*/staging_dir/* ./staging_dir/
 	rm -rf sdk.tar.xz sdk
+	rm -rf `find "staging_dir/host/" -maxdepth 2 -name 'libelf*'` || true
 	sed -i '/\(tools\|toolchain\)\/Makefile/d' Makefile
 	if [ -f /usr/bin/python ]; then
 		ln -sf /usr/bin/python staging_dir/host/bin/python
