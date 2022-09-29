@@ -1,9 +1,10 @@
 #!/bin/bash 
 
-rm -Rf feeds/packages/net/{smartdns,aria2} feeds/luci/themes/luci-theme-argon feeds/luci/applications/{luci-app-netdata,luci-app-baidupcs-web}
+rm -Rf feeds/packages/net/{smartdns,aria2,adguardhome} feeds/luci/themes/luci-theme-argon feeds/luci/applications/{luci-app-netdata,luci-app-baidupcs-web,luci-app-dockerman}
 ##############加载自定义app################
-svn co https://github.com/fw876/helloworld/trunk/luci-app-ssr-plus package/openwrt-packages/luci-app-ssr-plus
-git clone https://github.com/xiaorouji/openwrt-passwall package/openwrt-packages/luci-app-passwall
+git submodule add -f --name helloworld https://github.com/fw876/helloworld.git package/openwrt-packages/luci-app-ssr-plus
+git submodule update --remote package/openwrt-packages/luci-app-ssr-plus
+
 git clone https://github.com/vernesong/OpenClash.git package/openwrt-packages/OpenClash
 git clone https://github.com/jefferymvp/luci-app-koolproxyR package/openwrt-packages/luci-app-koolproxyR
 git clone https://github.com/Leo-Jo-My/luci-theme-opentomato.git package/openwrt-packages/luci-theme-opentomato
@@ -15,7 +16,6 @@ svn co https://github.com/kenzok8/openwrt-packages/trunk/luci-app-eqos package/o
 git clone https://github.com/binge8/luci-app-koolddns.git package/openwrt-packages/luci-app-koolddns
 svn co https://github.com/lisaac/luci-app-dockerman/trunk/applications/luci-app-dockerman package/openwrt-packages/luci-app-dockerman
 
-# svn co https://github.com/coolsnowwolf/packages/trunk/admin/netdata package/openwrt-packages/netdata
 git clone https://github.com/sirpdboy/luci-app-netdata package/openwrt-packages/luci-app-netdata
 git clone https://github.com/sirpdboy/luci-theme-opentopd package/openwrt-packages/luci-theme-opentopd
 
@@ -23,11 +23,9 @@ git clone https://github.com/jerrykuku/luci-app-vssr.git package/openwrt-package
 git clone https://github.com/jerrykuku/luci-app-argon-config.git package/openwrt-packages/luci-app-argon-config
 git clone https://github.com/jerrykuku/luci-theme-argon.git -b 18.06 package/openwrt-packages/luci-theme-argon
 git clone https://github.com/jerrykuku/node-request.git package/openwrt-packages/node-request
-git clone https://github.com/jerrykuku/luci-app-jd-dailybonus.git package/openwrt-packages/luci-app-jd-dailybonus
 
 git clone https://github.com/KFERMercer/luci-app-tcpdump.git package/openwrt-packages/luci-app-tcpdump
 
-svn co https://github.com/Lienol/openwrt-package/trunk/luci-app-socat package/openwrt-packages/luci-app-socat
 svn co https://github.com/Lienol/openwrt-luci/trunk/applications/luci-app-smartdns package/openwrt-packages/luci-app-smartdns
 svn co https://github.com/Lienol/openwrt-packages/trunk/net/smartdns package/openwrt-packages/smartdns
 svn co https://github.com/Lienol/openwrt-package/trunk/luci-app-control-timewol package/openwrt-packages/luci-app-control-timewol
@@ -41,7 +39,6 @@ svn co https://github.com/kiddin9/openwrt-bypass/trunk/luci-app-bypass package/o
 svn co https://github.com/kiddin9/openwrt-packages/trunk/aria2 package/openwrt-packages/aria2
 svn co https://github.com/kiddin9/openwrt-packages/trunk/luci-app-adguardhome package/openwrt-packages/luci-app-adguardhome
 svn co https://github.com/kiddin9/openwrt-packages/trunk/AdGuardHome package/openwrt-packages/adguardhome
-svn co https://github.com/kiddin9/openwrt-packages/trunk/luci-app-serverchan package/openwrt-packages/luci-app-serverchan
 svn co https://github.com/kiddin9/openwrt-packages/trunk/qBittorrent-Enhanced-Edition package/openwrt-packages/qBittorrent-Enhanced-Edition
 svn co https://github.com/kiddin9/openwrt-packages/trunk/lua-maxminddb package/openwrt-packages/lua-maxminddb
 ##############菜单整理美化#################
@@ -72,6 +69,10 @@ sed -i '1391s/主机名/主机映射/g' feeds/luci/modules/luci-base/po/zh-cn/ba
 sed -i 's/OpenWrt /OpenWrt Build By ViS0N /' package/lean/default-settings/files/zzz-default-settings
 
 sed -i '/localtime  = os.date()/s/()/("%Y年%m月%d日") .. " " .. translate(os.date("%A")) .. " " .. os.date("%X")/g' package/lean/autocore/files/x86/index.htm package/lean/autocore/files/arm/index.htm
+sed -i '/local cpu_usage/a\\t\tlocal up_time = luci.sys.exec("cntime")' package/lean/autocore/files/x86/index.htm package/lean/autocore/files/arm/index.htm
+sed -i "s/String.format('%t', info.uptime)/info.uptime/" package/lean/autocore/files/x86/index.htm package/lean/autocore/files/arm/index.htm
+sed -i 's/= sysinfo.uptime or 0/= up_time/' package/lean/autocore/files/x86/index.htm package/lean/autocore/files/arm/index.htm
+sed -i '/$(INSTALL_DIR) $(1)\/sbin/a\\t$(INSTALL_BIN) .\/files\/generic\/cntime $(1)\/sbin\/cntime' package/lean/autocore/Makefile
 
 sed -i 's/%D %V, %C/%D %V, %C, Build By ViS0N/g' package/base-files/files/etc/banner
 
@@ -87,7 +88,7 @@ sed -i 's/网络存储/存储/g' feeds/luci/applications/luci-app-usb-printer/po
 
 sed -i '/msgid "miniDLNA"/{n;s/miniDLNA/DLNA服务/;}' feeds/luci/applications/luci-app-minidlna/po/zh-cn/minidlna.po
 
-sed -i 's/IP\/MAC绑定/地址绑定/g' feeds/luci/applications/luci-app-arpbind/po/zh-cn/arpbind.po
+sed -i 's/IP\/MAC 绑定/地址绑定/g' feeds/luci/applications/luci-app-arpbind/po/zh-cn/arpbind.po
 
 sed -i 's/"ZeroTier"/"内网穿透"/g' feeds/luci/applications/luci-app-zerotier/luasrc/controller/zerotier.lua
 
@@ -95,7 +96,7 @@ sed -i 's/msgstr "诊断"/msgstr "网络诊断"/g' feeds/luci/applications/luci-
 sed -i 's/msgstr "诊断"/msgstr "网络诊断"/g' package/lean/default-settings/i18n/more.zh-cn.po
 sed -i 's/msgstr "诊断"/msgstr "网络诊断"/g' feeds/luci/applications/luci-app-mwan3/po/zh-cn/mwan3.po
 
-sed -i 's/msgstr "Socat"/msgstr "端口转发"/g' package/openwrt-packages/luci-app-socat/po/zh-cn/socat.po
+sed -i 's/msgstr "Socat"/msgstr "端口转发"/g' feeds/luci/applications/luci-app-socat/po/zh-cn/socat.po
 
 sed -i 's/BaiduPCS Web/百度网盘/g' package/openwrt-packages/luci-app-baidupcs-web/luasrc/controller/baidupcs-web.lua
 
@@ -133,9 +134,8 @@ sed -i 's/解锁网易云灰色歌曲/网易音乐/g' feeds/luci/applications/lu
 sed -i 's/services/vpn/g'  `grep services -rl feeds/luci/applications/luci-app-unblockmusic/luasrc`
 
 
-sed -i 's/Go 阿里云盘 WebDAV/阿里云盘/g' feeds/luci/applications/luci-app-go-aliyundrive-webdav/po/zh-cn/go-aliyundrive-webdav.po
-sed -i 's/Go 阿里云盘/阿里云盘/g' feeds/luci/applications/luci-app-go-aliyundrive-webdav/po/zh-cn/go-aliyundrive-webdav.po
-sed -i 's/services/vpn/g'  `grep services -rl feeds/luci/applications/luci-app-go-aliyundrive-webdav/luasrc`
+sed -i 's/阿里云盘 WebDAV/阿里云盘/g' feeds/luci/applications/luci-app-aliyundrive-webdav/po/zh-cn/go-aliyundrive-webdav.po
+sed -i 's/services/vpn/g'  `grep services -rl feeds/luci/applications/luci-app-aliyundrive-webdav/luasrc`
 
 sed -i '/msgid "UU GameAcc"/{n;s/UU游戏加速器/UU加速器/;}' feeds/luci/applications/luci-app-uugamebooster/po/zh-cn/uuplugin.po
 
@@ -144,8 +144,7 @@ sed -i 's/services/control/g'  `grep services -rl feeds/luci/applications/luci-a
 
 sed -i 's/Tcpdump 流量监控/流量监控/g' package/openwrt-packages/luci-app-tcpdump/po/zh-cn/tcpdump.po
 
-sed -i 's/network/control/g'  `grep network -rl package/openwrt-packages/OpenAppFilter/luci-app-oaf/luasrc`
-sed -i 's/control/network/g' package/openwrt-packages/OpenAppFilter/luci-app-oaf/luasrc/model/cbi/appfilter/appfilter.lua
+sed -i 's/services/control/g'  `grep network -rl package/openwrt-packages/OpenAppFilter/luci-app-oaf/luasrc`
 
 sed -i 's/90/56/g' package/openwrt-packages/luci-app-argon-config/luasrc/controller/argon-config.lua
 sed -i 's/"Argon 主题设置"/"主题设置"/g' package/openwrt-packages/luci-app-argon-config/po/zh-cn/argon-config.po
@@ -196,11 +195,11 @@ sed -i '/msgid "OpenClash"/{n;s/OpenClash/世界,你好/;}' package/openwrt-pack
 sed -i '/OpenClash/s/50/3/g' package/openwrt-packages/OpenClash/luci-app-openclash/luasrc/controller/openclash.lua
 sed -i 's/services/vpn/g'  `grep services -rl package/openwrt-packages/OpenClash/luci-app-openclash/luasrc`
 
-echo -e "\nmsgid \"ShadowSocksR Plus+\"" >> package/openwrt-packages/luci-app-ssr-plus/po/zh-cn/ssr-plus.po
-echo -e "msgstr \"翻越长城\"" >> package/openwrt-packages/luci-app-ssr-plus/po/zh-cn/ssr-plus.po
-sed -i '/ShadowSocksR Plus+/s/10/4/g' package/openwrt-packages/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
-sed -i 's/ShadowSocksR Plus+ 设置/SSR Plus设置/g' package/openwrt-packages/luci-app-ssr-plus/po/zh-cn/ssr-plus.po
-sed -i 's/services/vpn/g'  `grep services -rl package/openwrt-packages/luci-app-ssr-plus/luasrc`
+echo -e "\nmsgid \"ShadowSocksR Plus+\"" >> package/openwrt-packages/luci-app-ssr-plus/luci-app-ssr-plus/po/zh-cn/ssr-plus.po
+echo -e "msgstr \"翻越长城\"" >> package/openwrt-packages/luci-app-ssr-plus/luci-app-ssr-plus/po/zh-cn/ssr-plus.po
+sed -i '/ShadowSocksR Plus+/s/10/4/g' package/openwrt-packages/luci-app-ssr-plus/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
+sed -i 's/ShadowSocksR Plus+ 设置/SSR Plus设置/g' package/openwrt-packages/luci-app-ssr-plus/luci-app-ssr-plus/po/zh-cn/ssr-plus.po
+sed -i 's/services/vpn/g'  `grep services -rl package/openwrt-packages/luci-app-ssr-plus/luci-app-ssr-plus/luasrc`
 
 sed -i '/Hello World/s/0/5/g' package/openwrt-packages/luci-app-vssr/luasrc/controller/vssr.lua
 sed -i 's/Hello World/世界,你好/g' package/openwrt-packages/luci-app-vssr/luasrc/controller/vssr.lua
@@ -229,6 +228,6 @@ sed -i 's/services/vpn/g'  `grep services -rl package/openwrt-packages/luci-app-
 sed -i 's/DNSFilter/广告过滤/g' package/openwrt-packages/luci-app-dnsfilter/luasrc/controller/dnsfilter.lua
 sed -i 's/services/vpn/g'  `grep services -rl package/openwrt-packages/luci-app-dnsfilter/luasrc`
 
-sed -i 's/services/vpn/g'  `grep services -rl package/openwrt-packages/luci-app-serverchan/luasrc`
+sed -i 's/services/vpn/g'  `grep services -rl feeds/luci/applications/luci-app-serverchan/luasrc`
 
 ##############自定义结束#################
