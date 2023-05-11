@@ -25,7 +25,7 @@ svn co https://github.com/kenzok8/openwrt-packages/trunk/luci-app-passwall packa
 
 git clone https://github.com/sirpdboy/luci-app-netdata package/openwrt-packages/luci-app-netdata
 git clone https://github.com/sirpdboy/luci-theme-opentopd package/openwrt-packages/luci-theme-opentopd
-git clone https://github.com/sirpdboy/luci-app-wizard.git package/openwrt-packages/luci-app-wizard
+git clone https://github.com/sirpdboy/luci-app-netwizard package/openwrt-packages/luci-app-netwizard
 
 git clone https://github.com/jerrykuku/luci-app-vssr.git package/openwrt-packages/luci-app-vssr
 git clone https://github.com/jerrykuku/luci-app-argon-config.git package/openwrt-packages/luci-app-argon-config
@@ -115,8 +115,8 @@ sed -i 's/msgstr "Socat"/msgstr "端口转发"/g' feeds/luci/applications/luci-a
 
 sed -i 's/BaiduPCS Web/百度网盘/g' package/openwrt-packages/luci-app-baidupcs-web/luasrc/controller/baidupcs-web.lua
 
-sed -i 's/msgstr "设置向导"/msgstr "向导"/g' package/openwrt-packages/luci-app-wizard/files/luci/i18n/wizard.zh-cn.po
-sed -i "s/lan_ipaddr '*.*.*.*'/lan_ipaddr '192.168.10.1'/g" package/openwrt-packages/luci-app-wizard/files/root/etc/config/wizard
+sed -i 's/"Inital Setup"/"向导"/g' package/openwrt-packages/luci-app-netwizard/uasrc/controller/netwizard.lua
+sed -i "s/lan_ipaddr '*.*.*.*'/lan_ipaddr '192.168.10.1'/g" package/openwrt-packages/luci-app-netwizard/root/etc/config/netwizard
 
 sed -i 's/Setting/其它设置/g' package/openwrt-packages/luci-app-netdata/luasrc/controller/netdata.lua
 
