@@ -91,8 +91,8 @@ sed -i 's/msgstr "软件包"/msgstr "软件管理"/g' feeds/luci/applications/lu
 
 sed -i 's/BaiduPCS Web/百度网盘/g' feeds/luci/applications/luci-app-baidupcs-web/luasrc/controller/baidupcs-web.lua
 
-sed -i 's/"Inital Setup"/"向导"/g' package/openwrt-packages/luci-app-netwizard/controller/netwizard.lua
-sed -i "s/lan_ipaddr '*.*.*.*'/lan_ipaddr '192.168.10.1'/g" package/openwrt-packages/luci-app-netwizar/root/etc/config/netwizard
+sed -i 's/"Inital Setup"/"向导"/g' package/openwrt-packages/luci-app-netwizard/luasrc/controller/netwizard.lua
+sed -i "s/lan_ipaddr '*.*.*.*'/lan_ipaddr '192.168.10.1'/g" package/openwrt-packages/luci-app-netwizard/root/etc/config/netwizard
 
 sed -i 's/Setting/其它设置/g' feeds/luci/applications/luci-app-netdata/luasrc/controller/netdata.lua
 
@@ -207,6 +207,6 @@ sed -i '/DNSFilter/s/1/8/g' package/openwrt-packages/luci-app-dnsfilter/luasrc/c
 sed -i 's/DNSFilter/广告过滤/g' package/openwrt-packages/luci-app-dnsfilter/luasrc/controller/dnsfilter.lua
 sed -i 's/services/vpn/g'  `grep services -rl package/openwrt-packages/luci-app-dnsfilter/luasrc`
 
-sed -i 's/services/vpn/g'  `grep services -rl feeds/luci/applications/luci-app-serverchan/htdocs/luci-static/resources/view/serverchan`
+# sed -i 's/services/vpn/g'  `grep services -rl feeds/luci/applications/luci-app-serverchan/htdocs/luci-static/resources/view/serverchan`
 
 ##############自定义结束#################

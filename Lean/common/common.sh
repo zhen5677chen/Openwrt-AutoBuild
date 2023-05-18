@@ -15,13 +15,12 @@ svn co https://github.com/apollo-ng/luci-theme-darkmatter/trunk/luci package/ope
 git clone https://github.com/binge8/luci-app-koolddns.git package/openwrt-packages/luci-app-koolddns
 svn co https://github.com/lisaac/luci-app-dockerman/trunk/applications/luci-app-dockerman package/openwrt-packages/luci-app-dockerman
 
-# git clone https://github.com/xiaorouji/openwrt-passwall.git package/openwrt-packages/openwrt-passwall
 svn co https://github.com/kenzok8/small/trunk/brook package/openwrt-packages/brook
 svn co https://github.com/kenzok8/small/trunk/ssocks package/openwrt-packages/ssocks
 svn co https://github.com/kenzok8/small/trunk/trojan-go package/openwrt-packages/trojan-go
 svn co https://github.com/kenzok8/small/trunk/trojan-plus package/openwrt-packages/trojan-plus
+svn co https://github.com/kenzok8/small/trunk/luci-app-passwall package/openwrt-packages/luci-app-passwall
 svn co https://github.com/kenzok8/openwrt-packages/trunk/luci-app-eqos package/openwrt-packages/luci-app-eqos
-svn co https://github.com/kenzok8/openwrt-packages/trunk/luci-app-passwall package/openwrt-packages/luci-app-passwall
 
 git clone https://github.com/sirpdboy/luci-app-netdata package/openwrt-packages/luci-app-netdata
 git clone https://github.com/sirpdboy/luci-theme-opentopd package/openwrt-packages/luci-theme-opentopd
@@ -115,7 +114,7 @@ sed -i 's/msgstr "Socat"/msgstr "端口转发"/g' feeds/luci/applications/luci-a
 
 sed -i 's/BaiduPCS Web/百度网盘/g' package/openwrt-packages/luci-app-baidupcs-web/luasrc/controller/baidupcs-web.lua
 
-sed -i 's/"Inital Setup"/"向导"/g' package/openwrt-packages/luci-app-netwizard/uasrc/controller/netwizard.lua
+sed -i 's/"Inital Setup"/"向导"/g' package/openwrt-packages/luci-app-netwizard/luasrc/controller/netwizard.lua
 sed -i "s/lan_ipaddr '*.*.*.*'/lan_ipaddr '192.168.10.1'/g" package/openwrt-packages/luci-app-netwizard/root/etc/config/netwizard
 
 sed -i 's/Setting/其它设置/g' package/openwrt-packages/luci-app-netdata/luasrc/controller/netdata.lua
