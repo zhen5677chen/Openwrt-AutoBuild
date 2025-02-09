@@ -1,0 +1,19 @@
+CONFIG_TARGET_x86=y
+CONFIG_TARGET_x86_64=y
+CONFIG_TARGET_x86_64_DEVICE_generic=y
+
+CONFIG_GRUB_IMAGES=y
+# CONFIG_ISO_IMAGES is not set
+# CONFIG_QCOW2_IMAGES is not set
+# CONFIG_VDI_IMAGES is not set
+# CONFIG_VMDK_IMAGES is not set
+# CONFIG_VHDX_IMAGES is not set
+CONFIG_TARGET_KERNEL_PARTSIZE=30
+CONFIG_TARGET_ROOTFS_PARTSIZE=300
+
+# Applications
+CONFIG_PACKAGE_luci-app-watchcat=y
+CONFIG_PACKAGE_luci-app-unblockneteasemusic=y
+CONFIG_PACKAGE_luci-app-wrtbwmon=y
+CONFIG_PACKAGE_luci-app-smartdns=y
+CONFIG_PACKAGE_luci-app-lucky=y
